@@ -1,7 +1,7 @@
 import java.util.Objects;
 
 /**
- * QuantityMeasurementApp demonstrates unit comparison and conversion
+ * QuantityMeasurementApp demonstrates unit comparison, conversion, and now addition
  * using a generic QuantityLength class following DRY principles.
  */
 public class QuantityMeasurementApp {
@@ -49,7 +49,7 @@ public class QuantityMeasurementApp {
         }
 
         /**
-         * Converts current object to another unit and returns NEW instance.
+         * Converts current object to another unit and returns a NEW instance.
          */
         public QuantityLength convertTo(LengthUnit targetUnit) {
             double converted = convert(this.value, this.unit, targetUnit);
@@ -122,70 +122,77 @@ public class QuantityMeasurementApp {
         public String toString() {
             return "Quantity(" + value + ", " + unit + ")";
         }
+
+        /**
+         * Add two QuantityLength objects, resulting in the first operand's unit.
+         */
+        public static QuantityLength add(QuantityLength length1, QuantityLength length2) {
+            if (length1 == null || length2 == null) {
+                throw new IllegalArgumentException("Length objects cannot be null");
+            }
+
+            // Convert both lengths to the base unit (inches)
+            double baseLength1 = toBaseUnit(length1.value, length1.unit);
+            double baseLength2 = toBaseUnit(length2.value, length2.unit);
+
+            // Add the lengths
+            double resultBase = baseLength1 + baseLength2;
+
+            // Convert result back to the unit of the first operand
+            double result = resultBase / length1.unit.getFactor();
+
+            // Return new QuantityLength in the unit of the first operand
+            return new QuantityLength(result, length1.unit);
+        }
     }
 
     // -------------------------------
     // Demonstration API (Overloading)
     // -------------------------------
 
-    public static void demonstrateLengthConversion(double value,
-                                                   LengthUnit from,
-                                                   LengthUnit to) {
-        double result = QuantityLength.convert(value, from, to);
-        System.out.println("convert(" + value + ", " + from + ", " + to + ") = " + result);
+    public static void demonstrateLengthAddition(QuantityLength length1, QuantityLength length2) {
+        QuantityLength result = QuantityLength.add(length1, length2);
+        System.out.println(length1 + " + " + length2 + " = " + result);
     }
 
-    public static void demonstrateLengthConversion(QuantityLength quantity,
-                                                   LengthUnit to) {
-        QuantityLength converted = quantity.convertTo(to);
-        System.out.println(quantity + " → " + converted);
-    }
-
-    public static void demonstrateLengthEquality(QuantityLength q1,
-                                                 QuantityLength q2) {
-        System.out.println(q1 + " == " + q2 + " → " + q1.equals(q2));
-    }
-
-    public static void demonstrateLengthComparison(double v1, LengthUnit u1,
-                                                   double v2, LengthUnit u2) {
-        QuantityLength q1 = new QuantityLength(v1, u1);
-        QuantityLength q2 = new QuantityLength(v2, u2);
-        demonstrateLengthEquality(q1, q2);
+    public static void demonstrateLengthAddition(double v1, LengthUnit u1,
+                                                 double v2, LengthUnit u2) {
+        QuantityLength length1 = new QuantityLength(v1, u1);
+        QuantityLength length2 = new QuantityLength(v2, u2);
+        demonstrateLengthAddition(length1, length2);
     }
 
     // -------------------------------
-    // MAIN METHOD (Test Cases UC5)
+    // MAIN METHOD (Test Cases UC6)
     // -------------------------------
     public static void main(String[] args) {
 
-        // Basic conversions
-        demonstrateLengthConversion(1.0, LengthUnit.FEET, LengthUnit.INCHES);     // 12
-        demonstrateLengthConversion(3.0, LengthUnit.YARDS, LengthUnit.FEET);      // 9
-        demonstrateLengthConversion(36.0, LengthUnit.INCHES, LengthUnit.YARDS);   // 1
-        demonstrateLengthConversion(1.0, LengthUnit.CENTIMETERS, LengthUnit.INCHES);
+        // Same unit addition
+        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(2.0, LengthUnit.FEET));
+        demonstrateLengthAddition(new QuantityLength(6.0, LengthUnit.INCHES), new QuantityLength(6.0, LengthUnit.INCHES));
 
-        // Instance conversion
-        QuantityLength length = new QuantityLength(2.0, LengthUnit.YARDS);
-        demonstrateLengthConversion(length, LengthUnit.FEET);
+        // Cross-unit addition
+        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES));
+        demonstrateLengthAddition(new QuantityLength(12.0, LengthUnit.INCHES), new QuantityLength(1.0, LengthUnit.FEET));
+        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.YARDS), new QuantityLength(3.0, LengthUnit.FEET));
+        demonstrateLengthAddition(new QuantityLength(36.0, LengthUnit.INCHES), new QuantityLength(1.0, LengthUnit.YARDS));
 
-        // Equality checks
-        demonstrateLengthComparison(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCHES);
-        demonstrateLengthComparison(1.0, LengthUnit.YARDS, 36.0, LengthUnit.INCHES);
+        // Cross-unit with centimeters
+        demonstrateLengthAddition(new QuantityLength(2.54, LengthUnit.CENTIMETERS), new QuantityLength(1.0, LengthUnit.INCHES));
 
-        // Edge cases
-        demonstrateLengthConversion(0.0, LengthUnit.FEET, LengthUnit.INCHES);
-        demonstrateLengthConversion(-1.0, LengthUnit.FEET, LengthUnit.INCHES);
+        // Identity and Negative values
+        demonstrateLengthAddition(new QuantityLength(5.0, LengthUnit.FEET), new QuantityLength(0.0, LengthUnit.INCHES));
+        demonstrateLengthAddition(new QuantityLength(5.0, LengthUnit.FEET), new QuantityLength(-2.0, LengthUnit.FEET));
 
-        // Round-trip test
-        double v = 5.0;
-        double roundTrip = QuantityLength.convert(
-                QuantityLength.convert(v, LengthUnit.FEET, LengthUnit.INCHES),
-                LengthUnit.INCHES,
-                LengthUnit.FEET
-        );
-        System.out.println("Round-trip preserved: " + (Math.abs(v - roundTrip) < 1e-6));
+        // Commutativity check
+        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES));
+        demonstrateLengthAddition(new QuantityLength(12.0, LengthUnit.INCHES), new QuantityLength(1.0, LengthUnit.FEET));
 
-        // Exception test (uncomment to verify)
-        // QuantityLength.convert(Double.NaN, LengthUnit.FEET, LengthUnit.INCHES);
+        // Large and small values
+        demonstrateLengthAddition(new QuantityLength(1e6, LengthUnit.FEET), new QuantityLength(1e6, LengthUnit.FEET));
+        demonstrateLengthAddition(new QuantityLength(0.001, LengthUnit.FEET), new QuantityLength(0.002, LengthUnit.FEET));
+
+        // Test invalid cases (uncomment to verify)
+        // demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), null); // Should throw an exception
     }
 }
