@@ -2,41 +2,49 @@ import java.util.Objects;
 
 public class QuantityMeasurementApp {
 
-    // Enum for the unit type
-    public enum Unit {
-        FEET, INCHES
+    // Enum for supported length units with their conversion factors to a base unit (inches)
+    public enum LengthUnit {
+        FEET(12), // 1 foot = 12 inches
+        INCHES(1); // 1 inch = 1 inch
+
+        private final double conversionFactor;
+
+        LengthUnit(double conversionFactor) {
+            this.conversionFactor = conversionFactor;
+        }
+
+        public double getConversionFactor() {
+            return conversionFactor;
+        }
     }
 
-    // Generic Quantity class to represent measurements in different units
-    public static class Quantity {
+    // Generic QuantityLength class to represent measurements of length with various units
+    public static class QuantityLength {
         private final double value;
-        private final Unit unit;
+        private final LengthUnit unit;
 
-        // Constructor to initialize the value and the unit (feet or inches)
-        public Quantity(double value, Unit unit) {
+        // Constructor to initialize the value and unit
+        public QuantityLength(double value, LengthUnit unit) {
             this.value = value;
             this.unit = unit;
         }
 
-        // Getter for the value
+        // Getter for value
         public double getValue() {
             return value;
         }
 
-        // Getter for the unit
-        public Unit getUnit() {
+        // Getter for unit
+        public LengthUnit getUnit() {
             return unit;
         }
 
-        // Convert the quantity to inches for comparison
-        public double toInches() {
-            if (unit == Unit.FEET) {
-                return value * 12; // 1 foot = 12 inches
-            }
-            return value; // If already in inches, return the value as is
+        // Convert the quantity to inches for comparison purposes
+        public double toBaseUnitInches() {
+            return value * unit.getConversionFactor();
         }
 
-        // Overriding the equals() method to compare quantities
+        // Overriding the equals() method to compare length quantities
         @Override
         public boolean equals(Object obj) {
             // Check if the current object and the passed object are the same reference
@@ -45,11 +53,14 @@ public class QuantityMeasurementApp {
             // Check if the object is null or not of the same type
             if (obj == null || getClass() != obj.getClass()) return false;
 
-            // Cast the object to Quantity type
-            Quantity other = (Quantity) obj;
+            // Cast the object to QuantityLength type
+            QuantityLength other = (QuantityLength) obj;
 
-            // Compare the values after converting both to inches
-            return Double.compare(this.toInches(), other.toInches()) == 0;
+            // Handle the case where the unit is null
+            if (this.unit == null || other.unit == null) return false;
+
+            // Compare the values after converting both to inches (base unit)
+            return Double.compare(this.toBaseUnitInches(), other.toBaseUnitInches()) == 0;
         }
 
         // Override hashCode() to be consistent with equals()
@@ -59,8 +70,8 @@ public class QuantityMeasurementApp {
         }
     }
 
-    // Method to test equality of two quantities
-    public static boolean testEquality(Quantity q1, Quantity q2) {
+    // Method to test equality of two QuantityLength objects
+    public static boolean testEquality(QuantityLength q1, QuantityLength q2) {
         return q1.equals(q2);
     }
 
@@ -68,30 +79,43 @@ public class QuantityMeasurementApp {
         // Test cases to validate the equality functionality
 
         // Feet measurements
-        Quantity feet1 = new Quantity(1.0, Unit.FEET);
-        Quantity feet2 = new Quantity(1.0, Unit.FEET);
-        Quantity feet3 = new Quantity(2.0, Unit.FEET);
+        QuantityLength feet1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength feet2 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength feet3 = new QuantityLength(2.0, LengthUnit.FEET);
 
         // Inches measurements
-        Quantity inch1 = new Quantity(1.0, Unit.INCHES);
-        Quantity inch2 = new Quantity(1.0, Unit.INCHES);
-        Quantity inch3 = new Quantity(2.0, Unit.INCHES);
+        QuantityLength inch1 = new QuantityLength(1.0, LengthUnit.INCHES);
+        QuantityLength inch2 = new QuantityLength(1.0, LengthUnit.INCHES);
+        QuantityLength inch3 = new QuantityLength(2.0, LengthUnit.INCHES);
 
         // Test for equality of same values (Feet)
-        System.out.println("Test 1 (Feet): " + testEquality(feet1, feet2)); // Should print true
+        System.out.println("Test 1 (Feet to Feet): " + testEquality(feet1, feet2)); // Should print true
 
         // Test for equality of different values (Feet)
-        System.out.println("Test 2 (Feet): " + testEquality(feet1, feet3)); // Should print false
+        System.out.println("Test 2 (Feet to Feet): " + testEquality(feet1, feet3)); // Should print false
 
         // Test for equality of same values (Inches)
-        System.out.println("Test 3 (Inches): " + testEquality(inch1, inch2)); // Should print true
+        System.out.println("Test 3 (Inches to Inches): " + testEquality(inch1, inch2)); // Should print true
 
         // Test for equality of different values (Inches)
-        System.out.println("Test 4 (Inches): " + testEquality(inch1, inch3)); // Should print false
+        System.out.println("Test 4 (Inches to Inches): " + testEquality(inch1, inch3)); // Should print false
 
-        // Test for Feet vs Inches equality (1 foot = 12 inches)
-        Quantity feetToInches = new Quantity(1.0, Unit.FEET);
-        Quantity inchToCompare = new Quantity(12.0, Unit.INCHES);
-        System.out.println("Test 5 (Feet to Inches): " + testEquality(feetToInches, inchToCompare)); // Should print true
+        // Test for equality of Feet vs Inches (1 foot = 12 inches)
+        QuantityLength feetToInches = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength inchToCompare = new QuantityLength(12.0, LengthUnit.INCHES);
+        System.out.println("Test 5 (Feet to Inches equivalent): " + testEquality(feetToInches, inchToCompare)); // Should print true
+
+        // Test for equality of Inches vs Feet (12 inches = 1 foot)
+        QuantityLength inchToFeet = new QuantityLength(12.0, LengthUnit.INCHES);
+        QuantityLength feetEquivalent = new QuantityLength(1.0, LengthUnit.FEET);
+        System.out.println("Test 6 (Inches to Feet equivalent): " + testEquality(inchToFeet, feetEquivalent)); // Should print true
+
+        // Test for invalid unit (Unsupported length unit)
+        try {
+            QuantityLength invalidUnit = new QuantityLength(10.0, null); // null unit should cause issue
+            System.out.println("Test 7 (Invalid unit): " + testEquality(inch1, invalidUnit)); // Should throw an error or handle gracefully
+        } catch (NullPointerException e) {
+            System.out.println("Test 7 (Invalid unit): Caught exception: " + e.getMessage());
+        }
     }
 }
