@@ -2,41 +2,22 @@ import java.util.Objects;
 
 public class QuantityMeasurementApp {
 
-    // Enum for the unit type
-    public enum Unit {
-        FEET, INCHES
-    }
-
-    // Generic Quantity class to represent measurements in different units
-    public static class Quantity {
+    // Inner class to represent Feet measurement
+    public static class Feet {
+        // Encapsulating the measurement value as a private final field
         private final double value;
-        private final Unit unit;
 
-        // Constructor to initialize the value and the unit (feet or inches)
-        public Quantity(double value, Unit unit) {
+        // Constructor to initialize the Feet measurement
+        public Feet(double value) {
             this.value = value;
-            this.unit = unit;
         }
 
-        // Getter for the value
+        // Getter method to access the value (if needed)
         public double getValue() {
             return value;
         }
 
-        // Getter for the unit
-        public Unit getUnit() {
-            return unit;
-        }
-
-        // Convert the quantity to inches for comparison
-        public double toInches() {
-            if (unit == Unit.FEET) {
-                return value * 12; // 1 foot = 12 inches
-            }
-            return value; // If already in inches, return the value as is
-        }
-
-        // Overriding the equals() method to compare quantities
+        // Overriding the equals() method from Object class
         @Override
         public boolean equals(Object obj) {
             // Check if the current object and the passed object are the same reference
@@ -45,53 +26,42 @@ public class QuantityMeasurementApp {
             // Check if the object is null or not of the same type
             if (obj == null || getClass() != obj.getClass()) return false;
 
-            // Cast the object to Quantity type
-            Quantity other = (Quantity) obj;
+            // Cast the object to Feet type
+            Feet otherFeet = (Feet) obj;
 
-            // Compare the values after converting both to inches
-            return Double.compare(this.toInches(), other.toInches()) == 0;
+            // Compare the values using Double.compare for precision
+            return Double.compare(this.value, otherFeet.value) == 0;
         }
 
-        // Override hashCode() to be consistent with equals()
+        // Optionally, override hashCode() to maintain the contract with equals()
         @Override
         public int hashCode() {
-            return Objects.hash(value, unit);
+            return Objects.hash(value);
         }
     }
 
-    // Method to test equality of two quantities
-    public static boolean testEquality(Quantity q1, Quantity q2) {
-        return q1.equals(q2);
-    }
-
+    // Main method to test the equality comparison
     public static void main(String[] args) {
         // Test cases to validate the equality functionality
+        Feet feet1 = new Feet(1.0);
+        Feet feet2 = new Feet(1.0);
+        Feet feet3 = new Feet(2.0);
+        Feet feet4 = new Feet(1.0);
+        Feet feet5 = null;
 
-        // Feet measurements
-        Quantity feet1 = new Quantity(1.0, Unit.FEET);
-        Quantity feet2 = new Quantity(1.0, Unit.FEET);
-        Quantity feet3 = new Quantity(2.0, Unit.FEET);
+        // Test for equality of same values
+        System.out.println("Test 1: " + feet1.equals(feet2)); // Should print true
 
-        // Inches measurements
-        Quantity inch1 = new Quantity(1.0, Unit.INCHES);
-        Quantity inch2 = new Quantity(1.0, Unit.INCHES);
-        Quantity inch3 = new Quantity(2.0, Unit.INCHES);
+        // Test for inequality of different values
+        System.out.println("Test 2: " + feet1.equals(feet3)); // Should print false
 
-        // Test for equality of same values (Feet)
-        System.out.println("Test 1 (Feet): " + testEquality(feet1, feet2)); // Should print true
+        // Test for null comparison
+        System.out.println("Test 3: " + feet1.equals(feet5)); // Should print false
 
-        // Test for equality of different values (Feet)
-        System.out.println("Test 2 (Feet): " + testEquality(feet1, feet3)); // Should print false
+        // Test for non-null comparison with same value
+        System.out.println("Test 4: " + feet1.equals(feet4)); // Should print true
 
-        // Test for equality of same values (Inches)
-        System.out.println("Test 3 (Inches): " + testEquality(inch1, inch2)); // Should print true
-
-        // Test for equality of different values (Inches)
-        System.out.println("Test 4 (Inches): " + testEquality(inch1, inch3)); // Should print false
-
-        // Test for Feet vs Inches equality (1 foot = 12 inches)
-        Quantity feetToInches = new Quantity(1.0, Unit.FEET);
-        Quantity inchToCompare = new Quantity(12.0, Unit.INCHES);
-        System.out.println("Test 5 (Feet to Inches): " + testEquality(feetToInches, inchToCompare)); // Should print true
+        // Test for reflexive property (a == a)
+        System.out.println("Test 5: " + feet1.equals(feet1)); // Should print true
     }
 }
