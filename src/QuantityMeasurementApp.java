@@ -2,7 +2,7 @@ import java.util.Objects;
 
 /**
  * QuantityMeasurementApp demonstrates unit comparison, conversion, and now addition
- * using a generic QuantityLength class following DRY principles.
+ * with explicit target unit specification as per UC7.
  */
 public class QuantityMeasurementApp {
 
@@ -144,55 +144,74 @@ public class QuantityMeasurementApp {
             // Return new QuantityLength in the unit of the first operand
             return new QuantityLength(result, length1.unit);
         }
+
+        /**
+         * Add two QuantityLength objects, returning the result in the specified target unit.
+         */
+        public static QuantityLength add(QuantityLength length1, QuantityLength length2, LengthUnit targetUnit) {
+            if (length1 == null || length2 == null || targetUnit == null) {
+                throw new IllegalArgumentException("Length objects and target unit cannot be null");
+            }
+
+            // Convert both lengths to the base unit (inches)
+            double baseLength1 = toBaseUnit(length1.value, length1.unit);
+            double baseLength2 = toBaseUnit(length2.value, length2.unit);
+
+            // Add the lengths
+            double resultBase = baseLength1 + baseLength2;
+
+            // Convert the sum to the target unit
+            double resultInTargetUnit = resultBase / targetUnit.getFactor();
+
+            // Return new QuantityLength in the target unit
+            return new QuantityLength(resultInTargetUnit, targetUnit);
+        }
     }
 
     // -------------------------------
     // Demonstration API (Overloading)
     // -------------------------------
 
-    public static void demonstrateLengthAddition(QuantityLength length1, QuantityLength length2) {
-        QuantityLength result = QuantityLength.add(length1, length2);
+    public static void demonstrateLengthAddition(QuantityLength length1, QuantityLength length2, LengthUnit targetUnit) {
+        QuantityLength result = QuantityLength.add(length1, length2, targetUnit);
         System.out.println(length1 + " + " + length2 + " = " + result);
     }
 
     public static void demonstrateLengthAddition(double v1, LengthUnit u1,
-                                                 double v2, LengthUnit u2) {
+                                                 double v2, LengthUnit u2, LengthUnit targetUnit) {
         QuantityLength length1 = new QuantityLength(v1, u1);
         QuantityLength length2 = new QuantityLength(v2, u2);
-        demonstrateLengthAddition(length1, length2);
+        demonstrateLengthAddition(length1, length2, targetUnit);
     }
 
     // -------------------------------
-    // MAIN METHOD (Test Cases UC6)
+    // MAIN METHOD (Test Cases UC7)
     // -------------------------------
     public static void main(String[] args) {
 
-        // Same unit addition
-        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(2.0, LengthUnit.FEET));
-        demonstrateLengthAddition(new QuantityLength(6.0, LengthUnit.INCHES), new QuantityLength(6.0, LengthUnit.INCHES));
+        // Explicit target unit addition
+        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES), LengthUnit.FEET);
+        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES), LengthUnit.INCHES);
+        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES), LengthUnit.YARDS);
+        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.YARDS), new QuantityLength(3.0, LengthUnit.FEET), LengthUnit.YARDS);
+        demonstrateLengthAddition(new QuantityLength(36.0, LengthUnit.INCHES), new QuantityLength(1.0, LengthUnit.YARDS), LengthUnit.FEET);
+        demonstrateLengthAddition(new QuantityLength(2.54, LengthUnit.CENTIMETERS), new QuantityLength(1.0, LengthUnit.INCHES), LengthUnit.CENTIMETERS);
 
-        // Cross-unit addition
-        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES));
-        demonstrateLengthAddition(new QuantityLength(12.0, LengthUnit.INCHES), new QuantityLength(1.0, LengthUnit.FEET));
-        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.YARDS), new QuantityLength(3.0, LengthUnit.FEET));
-        demonstrateLengthAddition(new QuantityLength(36.0, LengthUnit.INCHES), new QuantityLength(1.0, LengthUnit.YARDS));
+        // Zero and negative operand tests
+        demonstrateLengthAddition(new QuantityLength(5.0, LengthUnit.FEET), new QuantityLength(0.0, LengthUnit.INCHES), LengthUnit.YARDS);
+        demonstrateLengthAddition(new QuantityLength(5.0, LengthUnit.FEET), new QuantityLength(-2.0, LengthUnit.FEET), LengthUnit.INCHES);
 
-        // Cross-unit with centimeters
-        demonstrateLengthAddition(new QuantityLength(2.54, LengthUnit.CENTIMETERS), new QuantityLength(1.0, LengthUnit.INCHES));
+        // Commutativity test with explicit target unit
+        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES), LengthUnit.YARDS);
+        demonstrateLengthAddition(new QuantityLength(12.0, LengthUnit.INCHES), new QuantityLength(1.0, LengthUnit.FEET), LengthUnit.YARDS);
 
-        // Identity and Negative values
-        demonstrateLengthAddition(new QuantityLength(5.0, LengthUnit.FEET), new QuantityLength(0.0, LengthUnit.INCHES));
-        demonstrateLengthAddition(new QuantityLength(5.0, LengthUnit.FEET), new QuantityLength(-2.0, LengthUnit.FEET));
+        // Null target unit handling (uncomment to test exception)
+        // demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES), null); // Should throw an exception
 
-        // Commutativity check
-        demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES));
-        demonstrateLengthAddition(new QuantityLength(12.0, LengthUnit.INCHES), new QuantityLength(1.0, LengthUnit.FEET));
+        // Large-to-small scale conversion (test large units)
+        demonstrateLengthAddition(new QuantityLength(1000.0, LengthUnit.FEET), new QuantityLength(500.0, LengthUnit.FEET), LengthUnit.INCHES);
 
-        // Large and small values
-        demonstrateLengthAddition(new QuantityLength(1e6, LengthUnit.FEET), new QuantityLength(1e6, LengthUnit.FEET));
-        demonstrateLengthAddition(new QuantityLength(0.001, LengthUnit.FEET), new QuantityLength(0.002, LengthUnit.FEET));
-
-        // Test invalid cases (uncomment to verify)
-        // demonstrateLengthAddition(new QuantityLength(1.0, LengthUnit.FEET), null); // Should throw an exception
+        // Small-to-large scale conversion (test small units)
+        demonstrateLengthAddition(new QuantityLength(12.0, LengthUnit.INCHES), new QuantityLength(12.0, LengthUnit.INCHES), LengthUnit.YARDS);
     }
 }
